@@ -48,10 +48,21 @@ class ACSIncomeBiasMetrics:
 
     def __calculate_cm(self, df):
         male_df = df[df["SEX_Male"] == 1]
+        print("Number of males:", male_df.shape[0])
         female_df = df[df["SEX_Female"] == 1]
+        print("Number of females:", female_df.shape[0])
 
         TPU, FPU, TNU, FNU = self.perf_measure(female_df["PINCP"].values, female_df["PINCP_predicted"].values)
         TPP, FPP, TNP, FNP = self.perf_measure(male_df["PINCP"].values, male_df["PINCP_predicted"].values)
+
+        print(f"True Positive Unpriviliged:{TPU}")
+        print(f"False Positive Unpriviliged:{FPU}")
+        print(f"True Positive Priviliged:{TPP}")
+        print(f"False Positive Priviliged:{FPP}")
+        print(f"True Negative Unpriviliged:{TNU}")
+        print(f"False Negative Unpriviliged:{FNU}")
+        print(f"True Negative Priviliged:{TNP}")
+        print(f"False Negative Priviliged:{FNP}")
         return TPU, FPU, TNU, FNU, TPP, FPP, TNP, FNP
 
     def calculate_equal_opportunity_diff(self, df):
@@ -74,9 +85,9 @@ class ACSIncomeBiasMetrics:
         eo = self.calculate_eo(df)
 
         print(f"Disparate impact: {di}")
-        # print(f"Equal opportunity diff: {eod}")
+        print(f"Equal opportunity diff: {eod}")
         print(f"Statistical parity: {sp}")
-        # print(f"EO: {eo}")
+        print(f"EO: {eo}")
 
     def return_bias_metrics(self, df):
         di = self.calculate_disparate_impact(df)

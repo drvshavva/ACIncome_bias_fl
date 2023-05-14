@@ -10,6 +10,9 @@ from sklearn.metrics import log_loss
 from sklearn.linear_model import LogisticRegression
 from typing import Dict
 from metrics.bias_metrics import ACSIncomeBiasMetrics
+from client_virtual import client_fn
+
+NUM_CLIENTS = 10
 
 
 def fit_round(server_round: int) -> Dict:
@@ -45,12 +48,23 @@ if __name__ == "__main__":
     model = LogisticRegression()
     fl_utils.set_initial_params(model)
     strategy = fl.server.strategy.FedAvg(
-        min_available_clients=2,
+        fraction_fit=1.0,  # Sample 100% of available clients for training
+        fraction_evaluate=1.0,  # Sample 100% of available clients for evaluation
+        min_fit_clients=NUM_CLIENTS,  # Never sample less than 50 clients for training
+        min_evaluate_clients=NUM_CLIENTS,  # Never sample less than 50 clients for evaluation
+        min_available_clients=NUM_CLIENTS,  # Wait until all 50 clients are available
         evaluate_fn=get_evaluate_fn(model),
         on_fit_config_fn=fit_round,
     )
-    fl.server.start_server(
-        server_address="127.0.0.1:8080",
-        strategy=strategy,
+    # fl.server.start_server(
+    #     server_address="127.0.0.1:8080",
+    #     strategy=strategy,
+    #     config=fl.server.ServerConfig(num_rounds=5),
+    # )
+    # Start simulation
+    fl.simulation.start_simulation(
+        client_fn=client_fn,
+        num_clients=NUM_CLIENTS,
         config=fl.server.ServerConfig(num_rounds=5),
+        strategy=strategy
     )

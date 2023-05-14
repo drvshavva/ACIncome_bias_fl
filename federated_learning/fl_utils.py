@@ -54,6 +54,7 @@ def load_data_for_state(state):
     x_train, y_train, x_test, y_test = preprocess.get_x_y_preprocessed(train_state, test_state)
     return x_train, y_train, x_test, y_test
 
+# def load_datasets()
 
 def load_test_dataset():
     _, test = preprocess.get_preprocessed_data()

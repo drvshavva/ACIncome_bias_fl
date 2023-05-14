@@ -14,10 +14,10 @@ import fl_utils
 
 def start_client_for_selected_state(state):
     x_train, y_train, x_test, y_test = fl_utils.load_data_for_state(state)
-
-    # Split train set into 10 partitions and randomly use one for training.
-    partition_id = np.random.choice(10)
-    (X_train, y_train) = fl_utils.partition(x_train.values, y_train.values, 10)[partition_id]
+    #
+    # # Split train set into 10 partitions and randomly use one for training.
+    # partition_id = np.random.choice(10)
+    # (X_train, y_train) = fl_utils.partition(x_train.values, y_train.values, 10)[partition_id]
 
     # Create LogisticRegression Model
     model = LogisticRegression()
@@ -34,9 +34,10 @@ def start_client_for_selected_state(state):
             # Ignore convergence failure due to low local epochs
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                model.fit(X_train, y_train)
+                model.fit(x_train.values, y_train.values)
             print(f"Training finished for round {config['server_round']}")
-            return fl_utils.get_model_parameters(model), len(X_train), {}
+            print(f"Number of training samples in state: {state} is {len(x_train)}")
+            return fl_utils.get_model_parameters(model), len(x_train), {}
 
         def evaluate(self, parameters, config):  # type: ignore
             fl_utils.set_model_params(model, parameters)
@@ -48,6 +49,7 @@ def start_client_for_selected_state(state):
                 axis=1)
             accuracy = model.score(x_test, y_test)
             di, sp, eo, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
+            print(f"Number of test samples in state: {state} is {len(x_test)}")
             return loss, len(x_test), {"accuracy": accuracy, "disparate impact": di,
                                        "statistical parity": sp, "equal opportunity": eo, "equal opportunity diff": eod}
 
@@ -58,4 +60,5 @@ def start_client_for_selected_state(state):
 if __name__ == '__main__':
     from utils.constants import states
 
+    print(f"Start for state:{states[int(sys.argv[1])]}")
     start_client_for_selected_state(states[int(sys.argv[1])])

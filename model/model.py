@@ -26,7 +26,8 @@ class ACSIncomeModel:
         print("-----------------------------------")
         print("Race Dağılımı Train:")
         print(train_state.groupby(['RAC1P_others', 'PINCP']).size())
-        self.print_model_metrics(train_state, test_state)
+        test = test.drop('ST', axis=1)
+        self.print_model_metrics(train_state, test)
 
     def print_model_metrics(self, train, test, pipeline=LogisticRegression()):
         x_train, y_train, x_test, y_test = self.__preprocess_train_test(train, test)

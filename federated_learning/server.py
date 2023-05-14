@@ -1,4 +1,5 @@
 import warnings
+
 warnings.filterwarnings('ignore')
 
 import flwr as fl
@@ -32,9 +33,9 @@ def get_evaluate_fn(model: LogisticRegression):
              pd.DataFrame(predicted, columns=["PINCP_predicted"])],
             axis=1)
         accuracy = model.score(x_test, y_test)
-        di, sp = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
+        di, sp, eo, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
         return loss, {"accuracy": accuracy, "disparate impact": di,
-                      "statistical parity": sp}
+                      "statistical parity": sp, "equal opportunity": eo, "equal opportunity diff": eod}
 
     return evaluate
 

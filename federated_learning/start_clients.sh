@@ -8,6 +8,7 @@ export PYTHONPATH=${project_base}
 
 for i in `seq 0 5`; do
     echo "Starting client $i"
+    sleep $((RANDOM % 100))
     ${python_base} client.py $i &
 done
 

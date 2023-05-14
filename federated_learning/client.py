@@ -47,14 +47,15 @@ def start_client_for_selected_state(state):
                  pd.DataFrame(predicted, columns=["PINCP_predicted"])],
                 axis=1)
             accuracy = model.score(x_test, y_test)
-            di, sp = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
+            di, sp, eo, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
             return loss, len(x_test), {"accuracy": accuracy, "disparate impact": di,
-                                       "statistical parity": sp}
+                                       "statistical parity": sp, "equal opportunity": eo, "equal opportunity diff": eod}
 
     # Start Flower client
-    fl.client.start_numpy_client(server_address="127.0.0.1:8080", client=ACSIncomeClient())
+    fl.client.start_numpy_client(server_address="10.8.131.175:8080", client=ACSIncomeClient())
 
 
 if __name__ == '__main__':
     from utils.constants import states
+
     start_client_for_selected_state(states[int(sys.argv[1])])

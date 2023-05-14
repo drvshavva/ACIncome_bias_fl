@@ -48,6 +48,7 @@ class DatasetUtils:
             df_all.SCHL.replace(key, value, inplace=True)
 
         # RAC1P race durumunu inceleyelim
+        self.categories["RAC1P"].update({i: f'others' for i in range(2, 10)})
         for key, value in self.categories["RAC1P"].items():
             df_all.RAC1P.replace(key, value, inplace=True)
 

@@ -24,8 +24,8 @@ class ACSIncomeModel:
         print("-----------------------------------")
         print(f"  RESULTS for state: {state_name} ")
         print("-----------------------------------")
-        print("Cinsiyet Dağılımı Train:")
-        print(train_state.groupby(['SEX_Female', 'PINCP']).size())
+        print("Race Dağılımı Train:")
+        print(train_state.groupby(['RAC1P_others', 'PINCP']).size())
         self.print_model_metrics(train_state, test_state)
 
     def print_model_metrics(self, train, test, pipeline=LogisticRegression()):

@@ -2,17 +2,17 @@ import numpy as np
 import pandas as pd
 from os.path import dirname
 
-from utils.constants import ACSIncome_categories, _STATE_CODES, states
+from fairfl.utils.constants import ACSIncome_categories, _STATE_CODES, states
 
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
-from model.preprocess import ACSIncomePreprocess
+from fairfl.model.preprocess import ACSIncomePreprocess
 
 
 class DatasetUtils:
     def __init__(self):
-        self.dataset_path = dirname(dirname(__file__)) + "/dataset"
+        self.dataset_path = dirname(dirname(dirname(__file__))) + "/dataset"
         self.states = states
         self._state_codes = _STATE_CODES
         self.categories = ACSIncome_categories
@@ -48,6 +48,7 @@ class DatasetUtils:
             df_all.SCHL.replace(key, value, inplace=True)
 
         # RAC1P race durumunu inceleyelim
+        self.categories["RAC1P"].update({i: f'others' for i in range(2, 10)})
         for key, value in self.categories["RAC1P"].items():
             df_all.RAC1P.replace(key, value, inplace=True)
 
@@ -56,6 +57,13 @@ class DatasetUtils:
     def __filter_state(self, df, state):
         _df = df.query(f"ST == {int(self._state_codes[state])}")
         return _df.drop('ST', axis=1)
+
+
+    def get_selected_states(self, df, selected_states):
+        _states = [int(self._state_codes[state]) for state in selected_states]
+        _df = df[df['ST'].isin(_states)]
+        _df = _df.drop('ST', axis=1)
+        return _df
 
     def get_state_data(self, train: pd.DataFrame, test: pd.DataFrame, state_name):
         """

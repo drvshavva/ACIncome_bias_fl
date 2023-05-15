@@ -6,7 +6,7 @@ from sklearn.preprocessing import *
 
 class ACSIncomePreprocess:
     def __init__(self):
-        self.dataset_path = dirname(dirname(__file__)) + "/dataset"
+        self.dataset_path = dirname(dirname(dirname(__file__))) + "/dataset"
 
     @staticmethod
     def __school(df):

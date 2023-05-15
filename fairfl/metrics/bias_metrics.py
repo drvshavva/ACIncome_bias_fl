@@ -1,16 +1,26 @@
+import pandas as pd
+
+
+class BiasType:
+    race = "race"
+    gender = "gender"
+    age = "age"
+
+
 class ACSIncomeBiasMetrics:
-    @staticmethod
-    def __calculate_ratios(df):
-        male_df = df[df["SEX_Male"] == 1]
-        num_of_priviliged = male_df.shape[0]
+    def __init__(self, bias_type=BiasType.race):
+        self.bias_type = bias_type
 
-        female_df = df[df["SEX_Female"] == 1]
-        num_of_unpriviliged = female_df.shape[0]
+    def __calculate_ratios(self, df):
+        priviliged, unpriviliged = self.__get_priviliged_unpriviliged(df)
 
-        unpriviliged_labels = female_df[female_df["PINCP_predicted"] == 1].shape[0]
+        num_of_priviliged = priviliged.shape[0]
+        num_of_unpriviliged = unpriviliged.shape[0]
+
+        unpriviliged_labels = unpriviliged[unpriviliged["PINCP_predicted"] == 1].shape[0]
         unpriviliged_ratio = unpriviliged_labels / num_of_unpriviliged
 
-        priviliged_labels = male_df[male_df["PINCP_predicted"] == 1].shape[0]
+        priviliged_labels = priviliged[priviliged["PINCP_predicted"] == 1].shape[0]
         priviliged_ratio = priviliged_labels / num_of_priviliged
         return unpriviliged_ratio, priviliged_ratio
 
@@ -46,26 +56,42 @@ class ACSIncomeBiasMetrics:
 
         return tp, fp, tn, fn
 
-    def __calculate_cm(self, df):
-        male_df = df[df["SEX_Male"] == 1]
-        female_df = df[df["SEX_Female"] == 1]
+    def __get_priviliged_unpriviliged(self, df):
+        if self.bias_type is BiasType.race:
+            priviliged = df[df["RAC1P_White alone"] == 1]
+            unpriviliged = df[df["RAC1P_others"] == 1]
+        elif  self.bias_type is BiasType.gender:
+            priviliged = df[df["SEX_Male"] == 1]
+            unpriviliged = df[df["SEX_Female"] == 1]
+        else:
+            # todo: age için devam edilecek
+            pass
+        return priviliged, unpriviliged
 
-        TPU, FPU, TNU, FNU = self.perf_measure(female_df["PINCP"].values, female_df["PINCP_predicted"].values)
-        TPP, FPP, TNP, FNP = self.perf_measure(male_df["PINCP"].values, male_df["PINCP_predicted"].values)
+    def __calculate_cm(self, df):
+        priviliged, unpriviliged = self.__get_priviliged_unpriviliged(df)
+
+        TPU, FPU, TNU, FNU = self.perf_measure(unpriviliged["PINCP"].values, unpriviliged["PINCP_predicted"].values)
+        TPP, FPP, TNP, FNP = self.perf_measure(priviliged["PINCP"].values, priviliged["PINCP_predicted"].values)
         return TPU, FPU, TNU, FNU, TPP, FPP, TNP, FNP
 
     def calculate_equal_opportunity_diff(self, df):
         """ iki grubun TPR ler arasındaki fark --> 0'a yakın olması beklenir"""
         TPU, FPU, TNU, FNU, TPP, FPP, TNP, FNP = self.__calculate_cm(df)
 
-        female_tpr = TPU / (TPU + FNU)
-        male_tpr = TPP / (TPP + FNP)
+        un_tpr = TPU / (TPU + FNU)
+        pri_tpr = TPP / (TPP + FNP)
 
-        return male_tpr - female_tpr
+        return pri_tpr - un_tpr
 
     def calculate_eo(self, df):
         TPU, FPU, TNU, FNU, TPP, FPP, TNP, FNP = self.__calculate_cm(df)
-        return 0.5 * (abs((FPP / (FPP + TNP)) - (FPU / (FPU + TNU))) + abs((TPP / (TPP + FNP)) - (TPU / (TPU + FNU))))
+        try:
+            res = 0.5 * (
+                    abs((FPP / (FPP + TNP)) - (FPU / (FPU + TNU))) + abs((TPP / (TPP + FNP)) - (TPU / (TPU + FNU))))
+        except:
+            res = 0
+        return res
 
     def calculate_bias_metrics(self, df):
         di = self.calculate_disparate_impact(df)
@@ -73,12 +99,15 @@ class ACSIncomeBiasMetrics:
         sp = self.calculate_statistical_parity(df)
         eo = self.calculate_eo(df)
 
-        print(f"Disparate impact: {di}")
-        # print(f"Equal opportunity diff: {eod}")
-        print(f"Statistical parity: {sp}")
-        # print(f"EO: {eo}")
+        return pd.DataFrame(
+            {'disparate_impact': [di],
+             'equal_opportunity_diff': [eod],
+             'statistical_parity': [sp],
+             'equal_opportunity': [eo]})
 
     def return_bias_metrics(self, df):
         di = self.calculate_disparate_impact(df)
         sp = self.calculate_statistical_parity(df)
-        return di, sp
+        eo = self.calculate_eo(df)
+        eod = self.calculate_equal_opportunity_diff(df)
+        return di, sp, eo, eod

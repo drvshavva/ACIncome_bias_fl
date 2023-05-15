@@ -5,14 +5,10 @@ project_base="/tmp/pycharm_project_99/"
 
 export PYTHONPATH=${project_base}
 
-
-for i in `seq 0 5`; do
-    echo "Starting client $i"
-    ${python_base} client.py $i &
-done
+echo "Starting simulation"
+${python_base} server.py
 
 # This will allow you to use CTRL+C to stop all background processes
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM
 # Wait for all background processes to complete
 wait
-# 242792

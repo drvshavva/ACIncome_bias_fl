@@ -1,8 +1,8 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
-from utils.read_data import DatasetUtils
-from model.preprocess import ACSIncomePreprocess
+from fairfl.utils.read_data import DatasetUtils
+from fairfl.model.preprocess import ACSIncomePreprocess
 
 utils = DatasetUtils()
 preprocess = ACSIncomePreprocess()
@@ -39,7 +39,8 @@ def set_initial_params(model: LogisticRegression):
     information.
     """
     n_classes = 2
-    n_features = 575  # Number of features in dataset
+    # n_features = 575  # Number of features in dataset
+    n_features = 568  # Number of features in dataset
     model.classes_ = np.array([i for i in range(10)])
 
     model.coef_ = np.zeros((n_classes, n_features))
@@ -50,7 +51,13 @@ def set_initial_params(model: LogisticRegression):
 def load_data_for_state(state):
     train, test = preprocess.get_preprocessed_data()
     train_state, test_state = utils.get_state_data(train, test, state)
-    x_train, y_train, x_test, y_test = preprocess.get_x_y_preprocessed(train_state, test_state)
+    del train
+    del test_state
+    # tüm denemelerde kullanılan test verisi kullanıldı
+    test = test.drop('ST', axis=1)
+    x_train, y_train, x_test, y_test = preprocess.get_x_y_preprocessed(train_state, test)
+    del train_state
+    del test
     return x_train, y_train, x_test, y_test
 
 
@@ -60,15 +67,15 @@ def load_test_dataset():
     return preprocess.split_x_y(test)
 
 
-def shuffle(X: np.ndarray, y: np.ndarray):
-    """Shuffle X and y."""
-    rng = np.random.default_rng()
-    idx = rng.permutation(len(X))
-    return X[idx], y[idx]
-
-
 def partition(X: np.ndarray, y: np.ndarray, num_partitions: int):
     """Split X and y into a number of partitions."""
     return list(
         zip(np.array_split(X, num_partitions), np.array_split(y, num_partitions))
     )
+
+
+def shuffle(X: np.ndarray, y: np.ndarray):
+    """Shuffle X and y."""
+    rng = np.random.default_rng()
+    idx = rng.permutation(len(X))
+    return X[idx], y[idx]

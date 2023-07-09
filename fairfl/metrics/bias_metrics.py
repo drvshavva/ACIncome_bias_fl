@@ -11,6 +11,35 @@ class ACSIncomeBiasMetrics:
     def __init__(self, bias_type=BiasType.race):
         self.bias_type = bias_type
 
+    def calculate_class_imbalance(self, df):
+        priviliged, unpriviliged = self.__get_priviliged_unpriviliged(df)
+
+        p = priviliged.shape[0]
+        up = unpriviliged.shape[0]
+
+        return (p - up) / (p + up)
+
+
+    def calculate_dpl(self, df):
+        priviliged, unpriviliged = self.__get_priviliged_unpriviliged(df)
+
+        num_of_priviliged = priviliged.shape[0]
+        num_of_unpriviliged = unpriviliged.shape[0]
+
+        unpriviliged_labels = unpriviliged[unpriviliged["PINCP"] == 1].shape[0]
+        unpriviliged_ratio = unpriviliged_labels / num_of_unpriviliged
+
+        priviliged_labels = priviliged[priviliged["PINCP"] == 1].shape[0]
+        priviliged_ratio = priviliged_labels / num_of_priviliged
+
+        return priviliged_ratio - unpriviliged_ratio
+    def calculate_before_train_metrics(self, df):
+        ci = self.calculate_class_imbalance(df)
+        dpl = self.calculate_dpl(df)
+        return pd.DataFrame(
+            {'class_imbalance': [ci],
+             'dpl': [dpl]})
+
     def __calculate_ratios(self, df):
         priviliged, unpriviliged = self.__get_priviliged_unpriviliged(df)
 
@@ -38,7 +67,7 @@ class ACSIncomeBiasMetrics:
     def calculate_statistical_parity(self, df):
         """ iki grubun 1 olması olasılıkları arasındaki fark --> 0'a yakın olması beklenir --> demografig parity olarakta bilinir"""
         unpriviliged_ratio, priviliged_ratio = self.__calculate_ratios(df)
-        return priviliged_ratio - unpriviliged_ratio
+        return unpriviliged_ratio - priviliged_ratio
 
     @staticmethod
     def perf_measure(y_actual, y_hat):
@@ -58,9 +87,9 @@ class ACSIncomeBiasMetrics:
 
     def __get_priviliged_unpriviliged(self, df):
         if self.bias_type is BiasType.race:
-            priviliged = df[df["RAC1P_White alone"] == 1]
-            unpriviliged = df[df["RAC1P_others"] == 1]
-        elif  self.bias_type is BiasType.gender:
+            priviliged = df[df["RAC1P_others"] == 1]
+            unpriviliged = df[df["RAC1P_Black"] == 1]
+        elif self.bias_type is BiasType.gender:
             priviliged = df[df["SEX_Male"] == 1]
             unpriviliged = df[df["SEX_Female"] == 1]
         else:
@@ -82,32 +111,37 @@ class ACSIncomeBiasMetrics:
         un_tpr = TPU / (TPU + FNU)
         pri_tpr = TPP / (TPP + FNP)
 
-        return pri_tpr - un_tpr
+        return un_tpr - pri_tpr
 
-    def calculate_eo(self, df):
+    def calculate_sd(self, df):
+        """ SD = TNd/(TNd + FPd) - TNa/(TNa + FPa) = TNRd - TNRa """
         TPU, FPU, TNU, FNU, TPP, FPP, TNP, FNP = self.__calculate_cm(df)
+
         try:
-            res = 0.5 * (
-                    abs((FPP / (FPP + TNP)) - (FPU / (FPU + TNU))) + abs((TPP / (TPP + FNP)) - (TPU / (TPU + FNU))))
+            un = TNU / (TNU + FPU)
         except:
-            res = 0
-        return res
+            un = 0
+        try:
+            pri = TNP / (TNP + FPP)
+        except:
+            pri = 0
+        return un - pri
 
     def calculate_bias_metrics(self, df):
         di = self.calculate_disparate_impact(df)
         eod = self.calculate_equal_opportunity_diff(df)
         sp = self.calculate_statistical_parity(df)
-        eo = self.calculate_eo(df)
+        sd = self.calculate_sd(df)
 
         return pd.DataFrame(
             {'disparate_impact': [di],
-             'equal_opportunity_diff': [eod],
+             'specificity_difference': [sd],
              'statistical_parity': [sp],
-             'equal_opportunity': [eo]})
+             'equal_opportunity_diff': [eod]})
 
     def return_bias_metrics(self, df):
         di = self.calculate_disparate_impact(df)
         sp = self.calculate_statistical_parity(df)
-        eo = self.calculate_eo(df)
+        sd = self.calculate_sd(df)
         eod = self.calculate_equal_opportunity_diff(df)
-        return di, sp, eo, eod
+        return di, sp, sd, eod

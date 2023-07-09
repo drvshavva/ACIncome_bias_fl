@@ -32,7 +32,7 @@ class DatasetUtils:
         df_all["PINCP"] = np.where(df_all["PINCP"] > 50_000, 1, 0)
         return df_all
 
-    def get_acs_income_data_procesed(self):
+    def get_acs_income_data_processed(self):
         df_all = self.get_acs_income_data()
 
         for key, value in self.categories["MAR"].items():
@@ -48,7 +48,7 @@ class DatasetUtils:
             df_all.SCHL.replace(key, value, inplace=True)
 
         # RAC1P race durumunu inceleyelim
-        self.categories["RAC1P"].update({i: f'others' for i in range(2, 10)})
+        self.categories["RAC1P"].update({i: f'others' for i in range(1, 10) if i != 2})
         for key, value in self.categories["RAC1P"].items():
             df_all.RAC1P.replace(key, value, inplace=True)
 
@@ -93,7 +93,7 @@ class DatasetUtils:
         return train, test
 
     def split_data_and_save(self, preprocess=True):
-        df = self.get_acs_income_data_procesed()
+        df = self.get_acs_income_data_processed()
         name = ""
         if preprocess:
             df = self.preprocess.preprocess(df)

@@ -62,7 +62,7 @@ ACSIncome_categories = {
     "SEX": {1.0: "Male", 2.0: "Female"},
     "RAC1P": {
         1.0: "White alone",
-        2.0: "Black or African American alone",
+        2.0: "Black",
         3.0: "American Indian alone",
         4.0: "Alaska Native alone",
         5.0: (

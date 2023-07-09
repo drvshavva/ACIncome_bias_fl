@@ -41,7 +41,7 @@ def set_initial_params(model: LogisticRegression):
     n_classes = 2
     # n_features = 575  # Number of features in dataset
     n_features = 568  # Number of features in dataset
-    model.classes_ = np.array([i for i in range(10)])
+    model.classes_ = np.array([i for i in range(2)])
 
     model.coef_ = np.zeros((n_classes, n_features))
     if model.fit_intercept:
@@ -52,19 +52,20 @@ def load_data_for_state(state):
     train, test = preprocess.get_preprocessed_data()
     train_state, test_state = utils.get_state_data(train, test, state)
     del train
-    del test_state
-    # tüm denemelerde kullanılan test verisi kullanıldı
-    test = test.drop('ST', axis=1)
-    x_train, y_train, x_test, y_test = preprocess.get_x_y_preprocessed(train_state, test)
-    del train_state
     del test
+    # tüm denemelerde kullanılan test verisi kullanıldı
+    # test = test.drop('ST', axis=1)
+    x_train, y_train, x_test, y_test = preprocess.get_x_y_preprocessed(train_state, test_state)
+    del train_state
+    del test_state
     return x_train, y_train, x_test, y_test
 
 
-def load_test_dataset():
+def load_test_dataset(states):
     _, test = preprocess.get_preprocessed_data()
-    test = test.drop('ST', axis=1)
-    return preprocess.split_x_y(test)
+    test_states = utils.get_selected_states(test, states)
+    # test = test.drop('ST', axis=1)
+    return preprocess.split_x_y(test_states)
 
 
 def partition(X: np.ndarray, y: np.ndarray, num_partitions: int):

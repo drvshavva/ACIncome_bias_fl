@@ -45,20 +45,20 @@ class ACSIncomeClient(fl.client.NumPyClient):
             axis=1)
         accuracy, precision, recall, f1 = ClassicalMetrics.calculate_classical_metrics(y_pred=predicted,
                                                                                        y_true=self.y_test)
-        di, sp, eo, eod = ACSIncomeBiasMetrics(self.bias_type).return_bias_metrics(test_df)
+        di, sp, sd, eod = ACSIncomeBiasMetrics(self.bias_type).return_bias_metrics(test_df)
         # print(f"Number of test samples in state: {self.state} is {len(self.x_test)}")
         return loss, len(self.x_test), {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1,
                                         "disparate impact": di,
-                                        "statistical parity": sp, "equal opportunity": eo,
+                                        "statistical parity": sp, "specificity difference": sd,
                                         "equal opportunity diff": eod}
 
 
 def client_fn(cid: str) -> ACSIncomeClient:
     """Create a client representing a single state."""
     # from fairfl.utils.constants import states
-    states = ["SD", "ME", "ID", "ND", "WY"]
+    states = ["MT", "NH", "ND", "ME", "SD"]
 
-    bias_type = BiasType.gender
+    bias_type = BiasType.race
 
     # Create LogisticRegression Model
     model = LogisticRegression()
@@ -69,8 +69,8 @@ def client_fn(cid: str) -> ACSIncomeClient:
     state = states[int(cid)]
     x_train, y_train, x_test, y_test = fl_utils.load_data_for_state(state)
 
-    partition_id = np.random.choice(10)
-    (x_train, y_train) = fl_utils.partition(x_train.values, y_train.values, 10)[partition_id]
+    partition_id = np.random.choice(5)
+    (x_train, y_train) = fl_utils.partition(x_train.values, y_train.values, 5)[partition_id]
 
     # Create a  single client representing a single state
     return ACSIncomeClient(model=model,

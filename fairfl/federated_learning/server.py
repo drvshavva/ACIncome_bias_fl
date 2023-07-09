@@ -1,4 +1,5 @@
 import warnings
+import pickle
 
 warnings.filterwarnings('ignore')
 
@@ -14,7 +15,7 @@ from fairfl.metrics.classical_metrics import ClassicalMetrics
 from client import client_fn
 
 NUM_CLIENTS = 5
-
+states = ["MT", "NH", "ND", "ME", "SD"]
 
 def fit_round(server_round: int) -> Dict:
     """Send round number to client."""
@@ -25,7 +26,7 @@ def get_evaluate_fn(model: LogisticRegression):
     """Return an evaluation function for server-side evaluation."""
 
     # Load test data here to avoid the overhead of doing it in `evaluate` itself
-    x_test, y_test = fl_utils.load_test_dataset()
+    x_test, y_test = fl_utils.load_test_dataset(states=states)
 
     # The `evaluate` function will be called after every round
     def evaluate(server_round, parameters: fl.common.NDArrays, config):
@@ -37,10 +38,12 @@ def get_evaluate_fn(model: LogisticRegression):
              pd.DataFrame(predicted, columns=["PINCP_predicted"])],
             axis=1)
         accuracy, precision, recall, f1 = ClassicalMetrics.calculate_classical_metrics(y_pred=predicted, y_true=y_test)
-        di, sp, eo, eod = ACSIncomeBiasMetrics("gender").return_bias_metrics(test_df)
+
+        di, sp, sd, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
+        pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_new.pkl", "wb"))
         return loss, {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1,
                       "disparate impact": di,
-                      "statistical parity": sp, "equal opportunity": eo, "equal opportunity diff": eod}
+                      "statistical parity": sp, "specificity difference": sd, "equal opportunity diff": eod}
 
     return evaluate
 

@@ -2,6 +2,7 @@ from os.path import dirname
 
 import pandas as pd
 from sklearn.preprocessing import *
+from sklearn.preprocessing import LabelEncoder
 
 
 class ACSIncomePreprocess:
@@ -36,8 +37,17 @@ class ACSIncomePreprocess:
 
     @staticmethod
     def __one_hot_to_others(df):
-        df = pd.get_dummies(df, columns=['COW', 'MAR', 'OCCP', 'RELP', 'RAC1P', 'SEX'])
+        df = pd.get_dummies(df, columns=['COW', 'MAR', 'OCCP', 'RELP', 'SEX'], dtype=float)
         return df
+
+    @staticmethod
+    def __categorical_to_others(df):
+        # Identify categorical columns
+        df_2 = df.copy()
+        for col in df.select_dtypes(include='object').columns:
+            le = LabelEncoder()
+            df_2[col] = le.fit_transform(df_2[col])
+        return df_2
 
     @staticmethod
     def split_x_y(df):
@@ -45,12 +55,22 @@ class ACSIncomePreprocess:
         y = df['PINCP']
         return x, y
 
-    def preprocess(self, df):
+    @staticmethod
+    def race(df):
+        df_x = df.copy()
+        df_x['RAC1P'].replace(df_x['RAC1P'].unique()[df_x['RAC1P'].unique() != 'Black or African American alone'],
+                              'others', inplace=True)
+        df_x['RAC1P'].replace(df_x['RAC1P'].unique()[df_x['RAC1P'].unique() == 'Black or African American alone'],
+                              'Black', inplace=True)
+        df_x['RAC1P'] = df_x['RAC1P'].replace({'Black': 0, 'others': 1})
+        return df_x
+
+    def preprocess(self, df, one_hot=True):
+        df = self.race(df)
         df = self.__school(df)
         df = self.__age(df)
         df = self.__working_hours(df)
-        df = self.__one_hot_to_others(df)
-
+        df = self.__one_hot_to_others(df) if one_hot else self.__categorical_to_others(df)
         return df
 
     def get_preprocessed_data(self):

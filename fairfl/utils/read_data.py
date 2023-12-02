@@ -32,8 +32,9 @@ class DatasetUtils:
         df_all["PINCP"] = np.where(df_all["PINCP"] > 50_000, 1, 0)
         return df_all
 
-    def get_acs_income_data_processed(self):
-        df_all = self.get_acs_income_data()
+    def get_acs_income_data_processed(self, df_all=None):
+        if df_all is None:
+            df_all = self.get_acs_income_data()
 
         for key, value in self.categories["MAR"].items():
             df_all.MAR.replace(key, value, inplace=True)
@@ -58,11 +59,10 @@ class DatasetUtils:
         _df = df.query(f"ST == {int(self._state_codes[state])}")
         return _df.drop('ST', axis=1)
 
-
-    def get_selected_states(self, df, selected_states):
+    def get_selected_states(self, df, selected_states, drop=True):
         _states = [int(self._state_codes[state]) for state in selected_states]
         _df = df[df['ST'].isin(_states)]
-        _df = _df.drop('ST', axis=1)
+        if drop: _df = _df.drop('ST', axis=1)
         return _df
 
     def get_state_data(self, train: pd.DataFrame, test: pd.DataFrame, state_name):

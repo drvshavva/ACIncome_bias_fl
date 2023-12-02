@@ -1,4 +1,5 @@
 import pandas as pd
+import copy
 
 
 class BiasType:
@@ -19,7 +20,6 @@ class ACSIncomeBiasMetrics:
 
         return (p - up) / (p + up)
 
-
     def calculate_dpl(self, df):
         priviliged, unpriviliged = self.__get_priviliged_unpriviliged(df)
 
@@ -33,6 +33,7 @@ class ACSIncomeBiasMetrics:
         priviliged_ratio = priviliged_labels / num_of_priviliged
 
         return priviliged_ratio - unpriviliged_ratio
+
     def calculate_before_train_metrics(self, df):
         ci = self.calculate_class_imbalance(df)
         dpl = self.calculate_dpl(df)
@@ -47,10 +48,15 @@ class ACSIncomeBiasMetrics:
         num_of_unpriviliged = unpriviliged.shape[0]
 
         unpriviliged_labels = unpriviliged[unpriviliged["PINCP_predicted"] == 1].shape[0]
-        unpriviliged_ratio = unpriviliged_labels / num_of_unpriviliged
-
+        try:
+            unpriviliged_ratio = unpriviliged_labels / num_of_unpriviliged  # burada 1 olarak tahmin edileni eleman sayısına oran
+        except:
+            unpriviliged_ratio = 0
         priviliged_labels = priviliged[priviliged["PINCP_predicted"] == 1].shape[0]
-        priviliged_ratio = priviliged_labels / num_of_priviliged
+        try:
+            priviliged_ratio = priviliged_labels / num_of_priviliged
+        except:
+            priviliged_ratio = 0
         return unpriviliged_ratio, priviliged_ratio
 
     def calculate_disparate_impact(self, df):
@@ -58,9 +64,11 @@ class ACSIncomeBiasMetrics:
         ayrıcalıklı grup --> male
         iki grubun 1 olması olasılıkları arasındaki oran 1 'e yakın olmalı"""
         unpriviliged_ratio, priviliged_ratio = self.__calculate_ratios(df)
+        #todo: burada bir yanlışlık olmuş metriklerde bunu bir hocana sor
         try:
-            di = priviliged_ratio / unpriviliged_ratio
+            di = unpriviliged_ratio / priviliged_ratio
         except:
+            # print(priviliged_ratio, unpriviliged_ratio)
             di = 0
         return di
 
@@ -86,12 +94,13 @@ class ACSIncomeBiasMetrics:
         return tp, fp, tn, fn
 
     def __get_priviliged_unpriviliged(self, df):
+        df_copy = copy.deepcopy(df)
         if self.bias_type is BiasType.race:
-            priviliged = df[df["RAC1P_others"] == 1]
-            unpriviliged = df[df["RAC1P_Black"] == 1]
+            priviliged = df_copy[df_copy["RAC1P"] == 1]  # others
+            unpriviliged = df_copy[df_copy["RAC1P"] == 0]  # black
         elif self.bias_type is BiasType.gender:
-            priviliged = df[df["SEX_Male"] == 1]
-            unpriviliged = df[df["SEX_Female"] == 1]
+            priviliged = df_copy[df_copy["SEX_Male"] == 1]
+            unpriviliged = df_copy[df_copy["SEX_Female"] == 1]
         else:
             # todo: age için devam edilecek
             pass
@@ -106,12 +115,10 @@ class ACSIncomeBiasMetrics:
 
     def calculate_equal_opportunity_diff(self, df):
         """ iki grubun TPR ler arasındaki fark --> 0'a yakın olması beklenir"""
-        TPU, FPU, TNU, FNU, TPP, FPP, TNP, FNP = self.__calculate_cm(df)
-
-        un_tpr = TPU / (TPU + FNU)
-        pri_tpr = TPP / (TPP + FNP)
-
-        return un_tpr - pri_tpr
+        df_eod = copy.deepcopy(df)
+        df_eod = df_eod[df_eod["PINCP"] == 1]
+        unpriviliged_ratio, priviliged_ratio = self.__calculate_ratios(df_eod)
+        return unpriviliged_ratio - priviliged_ratio
 
     def calculate_sd(self, df):
         """ SD = TNd/(TNd + FPd) - TNa/(TNa + FPa) = TNRd - TNRa """
@@ -131,13 +138,12 @@ class ACSIncomeBiasMetrics:
         di = self.calculate_disparate_impact(df)
         eod = self.calculate_equal_opportunity_diff(df)
         sp = self.calculate_statistical_parity(df)
-        sd = self.calculate_sd(df)
+        # sd = self.calculate_sd(df)
 
         return pd.DataFrame(
             {'disparate_impact': [di],
-             'specificity_difference': [sd],
-             'statistical_parity': [sp],
-             'equal_opportunity_diff': [eod]})
+             'equal_opportunity_diff': [eod],
+             'statistical_parity': [sp]})
 
     def return_bias_metrics(self, df):
         di = self.calculate_disparate_impact(df)

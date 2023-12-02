@@ -13,4 +13,4 @@ class ClassicalMetrics:
 
     def return_as_pd(self, y_pred, y_true):
         accuracy, precision, recall, f1 = self.calculate_classical_metrics(y_pred=y_pred, y_true=y_true)
-        return pd.DataFrame({'accuracy': [accuracy], 'precision': [precision], 'recall': [recall], 'f1_score': [f1]})
+        return pd.DataFrame({'f1_score': [f1]})

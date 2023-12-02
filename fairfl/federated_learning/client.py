@@ -47,9 +47,9 @@ class ACSIncomeClient(fl.client.NumPyClient):
                                                                                        y_true=self.y_test)
         di, sp, sd, eod = ACSIncomeBiasMetrics(self.bias_type).return_bias_metrics(test_df)
         # print(f"Number of test samples in state: {self.state} is {len(self.x_test)}")
-        return loss, len(self.x_test), {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1,
+        return loss, len(self.x_test), {"f1": f1,
                                         "disparate impact": di,
-                                        "statistical parity": sp, "specificity difference": sd,
+                                        "statistical parity": sp,
                                         "equal opportunity diff": eod}
 
 

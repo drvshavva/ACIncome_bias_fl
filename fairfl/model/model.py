@@ -26,13 +26,13 @@ class ACSIncomeModel:
     def print_model_metrics_for_state(self, train, test, state_name):
         train_state, test_state = self.utils.get_state_data(train, test, state_name)
         res_df = pd.DataFrame({"state": [state_name]})
-        group = "RAC1P_others" if self.bias_type is BiasType.race else "SEX_Male"
-        df_group = train_state.groupby([group, 'PINCP']).size().to_dict()
-        df_group_keys = list(df_group.keys())
-        res_df_group = pd.DataFrame({x: [df_group[x]] for x in df_group_keys})
+        # group = "RAC1P" if self.bias_type is BiasType.race else "SEX_Male"
+        # df_group = train_state.groupby([group, 'PINCP']).size().to_dict()
+        # df_group_keys = list(df_group.keys())
+        # res_df_group = pd.DataFrame({x: [df_group[x]] for x in df_group_keys})
         # test = test.drop('ST', axis=1)
         res_df_metrics = self.print_model_metrics(train_state, test_state)
-        return pd.concat([res_df, res_df_group, res_df_metrics], axis=1)
+        return pd.concat([res_df, res_df_metrics], axis=1)
 
     def print_before_bias_metrics_for_state(self, train, test, state_name):
         train_state, _ = self.utils.get_state_data(train, test, state_name)

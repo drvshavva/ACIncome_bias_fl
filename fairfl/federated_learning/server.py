@@ -41,9 +41,9 @@ def get_evaluate_fn(model: LogisticRegression):
 
         di, sp, sd, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
         pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_new.pkl", "wb"))
-        return loss, {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1,
+        return loss, {"f1": f1,
                       "disparate impact": di,
-                      "statistical parity": sp, "specificity difference": sd, "equal opportunity diff": eod}
+                      "statistical parity": sp, "equal opportunity diff": eod}
 
     return evaluate
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     model = LogisticRegression()
     fl_utils.set_initial_params(model)
     strategy = fl.server.strategy.FedAvg(
-        fraction_fit=1.0,
+        fraction_fit=0.5,
         fraction_evaluate=0.5,
         min_fit_clients=NUM_CLIENTS,
         min_evaluate_clients=3,

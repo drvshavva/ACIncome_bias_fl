@@ -14,8 +14,10 @@ from fairfl.metrics.bias_metrics import ACSIncomeBiasMetrics
 from fairfl.metrics.classical_metrics import ClassicalMetrics
 from client import client_fn
 
-NUM_CLIENTS = 5
-states = ["MT", "NH", "ND", "ME", "SD"]
+NUM_CLIENTS = 20
+states = ["MT", "WY", "ID", "VT", "UT", "SD", "ME", "NH", "OR", "ND", "IA", "AK", "HI", "NM", "NE", "CO", "WI", "MN",
+          "WA", "WV"]
+
 
 def fit_round(server_round: int) -> Dict:
     """Send round number to client."""
@@ -40,10 +42,10 @@ def get_evaluate_fn(model: LogisticRegression):
         accuracy, precision, recall, f1 = ClassicalMetrics.calculate_classical_metrics(y_pred=predicted, y_true=y_test)
 
         di, sp, sd, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
-        pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_new.pkl", "wb"))
+        pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_lfr.pkl", "wb"))
         return loss, {"f1": f1,
                       "disparate impact": di,
-                      "statistical parity": sp, "equal opportunity diff": eod}
+                      "equal opportunity diff": eod, "statistical parity": sp}
 
     return evaluate
 
@@ -53,7 +55,7 @@ if __name__ == "__main__":
     model = LogisticRegression()
     fl_utils.set_initial_params(model)
     strategy = fl.server.strategy.FedAvg(
-        fraction_fit=0.5,
+        fraction_fit=1.0,
         fraction_evaluate=0.5,
         min_fit_clients=NUM_CLIENTS,
         min_evaluate_clients=3,

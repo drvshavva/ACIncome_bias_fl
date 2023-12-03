@@ -56,7 +56,8 @@ class ACSIncomeClient(fl.client.NumPyClient):
 def client_fn(cid: str) -> ACSIncomeClient:
     """Create a client representing a single state."""
     # from fairfl.utils.constants import states
-    states = ["MT", "NH", "ND", "ME", "SD"]
+    states = ["MT", "WY", "ID", "VT", "UT", "SD", "ME", "NH", "OR", "ND", "IA", "AK", "HI", "NM", "NE", "CO", "WI", "MN",
+              "WA", "WV"]
 
     bias_type = BiasType.race
 

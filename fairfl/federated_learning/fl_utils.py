@@ -118,7 +118,7 @@ def load_data_for_state(state):
     # tüm denemelerde kullanılan test verisi kullanıldı
     # test = test.drop('ST', axis=1)
     # train_state = apply_reweighing_race(train_state)
-    # train_state = apply_di_remover(train_state)
+    train_state = apply_di_remover(train_state)
     # train_state = apply_optprep(train_state)
     x_train, y_train, x_test, y_test = preprocess.get_x_y_preprocessed(train_state, test_state)
     del train_state

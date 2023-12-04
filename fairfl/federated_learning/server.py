@@ -13,13 +13,14 @@ from typing import Dict
 from fairfl.metrics.bias_metrics import ACSIncomeBiasMetrics
 from fairfl.metrics.classical_metrics import ClassicalMetrics
 from client import client_fn
+from fairfed import FairFed
 
 NUM_CLIENTS = 20
 states = ["MT", "WY", "ID", "VT", "UT", "SD", "ME", "NH", "OR", "ND", "IA", "AK", "HI", "NM", "NE", "CO", "WI", "MN",
           "WA", "WV"]
 
 
-def fit_round(server_round: int) -> Dict:
+def server_params(server_round: int) -> Dict:
     """Send round number to client."""
     return {"server_round": server_round}
 
@@ -41,8 +42,8 @@ def get_evaluate_fn(model: LogisticRegression):
             axis=1)
         accuracy, precision, recall, f1 = ClassicalMetrics.calculate_classical_metrics(y_pred=predicted, y_true=y_test)
 
-        di, sp, sd, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
-        pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_lfr.pkl", "wb"))
+        di, sp, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
+        pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_fairfl236_dirm_5.pkl", "wb"))
         return loss, {"f1": f1,
                       "disparate impact": di,
                       "equal opportunity diff": eod, "statistical parity": sp}
@@ -54,14 +55,15 @@ def get_evaluate_fn(model: LogisticRegression):
 if __name__ == "__main__":
     model = LogisticRegression()
     fl_utils.set_initial_params(model)
-    strategy = fl.server.strategy.FedAvg(
+    strategy = FairFed(
+    #strategy = fl.server.strategy.FedAvg(
         fraction_fit=1.0,
-        fraction_evaluate=0.5,
+        fraction_evaluate=1.0,
         min_fit_clients=NUM_CLIENTS,
-        min_evaluate_clients=3,
+        min_evaluate_clients=NUM_CLIENTS,
         min_available_clients=NUM_CLIENTS,
         evaluate_fn=get_evaluate_fn(model),
-        on_fit_config_fn=fit_round,
+        on_fit_config_fn=server_params,
     )
 
     fl.simulation.start_simulation(

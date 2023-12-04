@@ -148,6 +148,6 @@ class ACSIncomeBiasMetrics:
     def return_bias_metrics(self, df):
         di = self.calculate_disparate_impact(df)
         sp = self.calculate_statistical_parity(df)
-        sd = self.calculate_sd(df)
+        # sd = self.calculate_sd(df)
         eod = self.calculate_equal_opportunity_diff(df)
-        return di, sp, sd, eod
+        return di, sp, eod

@@ -55,7 +55,7 @@ class ACSIncomeClient(fl.client.NumPyClient):
         print(f"Training finished for round {config['server_round']}")
         # print(f"Number of training samples in state: {self.state} is {len(self.x_train)}")
         return fl_utils.get_model_parameters(self.model), len(self.x_train), {f"segment": segment,
-                                                                              "len_test": len(self.x_test),
+                                                                              "len_test": len(self.x_test[self.x_test['RAC1P']==0]),
                                                                               "sp": sp_local,
                                                                               "state": self.state}
 

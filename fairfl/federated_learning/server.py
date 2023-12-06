@@ -43,7 +43,7 @@ def get_evaluate_fn(model: LogisticRegression):
         accuracy, precision, recall, f1 = ClassicalMetrics.calculate_classical_metrics(y_pred=predicted, y_true=y_test)
 
         di, sp, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
-        pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_fairfl236_dirm_5.pkl", "wb"))
+        pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_fairflv2_dirm.pkl", "wb"))
         return loss, {"f1": f1,
                       "disparate impact": di,
                       "equal opportunity diff": eod, "statistical parity": sp}

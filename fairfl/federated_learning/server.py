@@ -1,6 +1,8 @@
 import warnings
 import pickle
 
+import numpy as np
+
 warnings.filterwarnings('ignore')
 
 import flwr as fl
@@ -19,7 +21,8 @@ NUM_CLIENTS = 20
 states = ["MT", "WY", "ID", "VT", "UT", "SD", "ME", "NH", "OR", "ND", "IA", "AK", "HI", "NM", "NE", "CO", "WI", "MN",
           "WA", "WV"]
 
-
+seed = 10
+model_n = "fairfl_nirm_2"
 def server_params(server_round: int) -> Dict:
     """Send round number to client."""
     return {"server_round": server_round}
@@ -43,7 +46,8 @@ def get_evaluate_fn(model: LogisticRegression):
         accuracy, precision, recall, f1 = ClassicalMetrics.calculate_classical_metrics(y_pred=predicted, y_true=y_test)
 
         di, sp, eod = ACSIncomeBiasMetrics().return_bias_metrics(test_df)
-        pickle.dump(model, open(f"{str(NUM_CLIENTS)}_client_round_{str(server_round)}_fairfl236_dirm_5.pkl", "wb"))
+        if server_round == 5:
+            pickle.dump(model, open(f"res_v2/{model_n}_seed{seed}.pkl", "wb"))
         return loss, {"f1": f1,
                       "disparate impact": di,
                       "equal opportunity diff": eod, "statistical parity": sp}
@@ -53,7 +57,7 @@ def get_evaluate_fn(model: LogisticRegression):
 
 # Start Flower server for five rounds of federated learning
 if __name__ == "__main__":
-    model = LogisticRegression()
+    model = LogisticRegression(random_state=np.random.seed(seed), solver="liblinear", C=0.5)
     fl_utils.set_initial_params(model)
     strategy = FairFed(
     #strategy = fl.server.strategy.FedAvg(

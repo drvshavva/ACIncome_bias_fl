@@ -47,7 +47,7 @@ connected to the server. `min_available_clients` must be set to a value larger
 than or equal to the values of `min_fit_clients` and `min_evaluate_clients`.
 """
 
-beta = 5
+beta = 0.25
 
 
 def aggregate(results: List[Tuple[NDArrays, int, float, float]]) -> NDArrays:

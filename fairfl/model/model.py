@@ -39,6 +39,7 @@ class ACSIncomeModel:
         res_df = pd.DataFrame({"state": [state_name]})
         metrics = self.bias_metrics.calculate_before_train_metrics(train_state)
         return pd.concat([res_df, metrics], axis=1)
+
     def print_model_metrics(self, train, test, pipeline=LogisticRegression()):
         x_train, y_train, x_test, y_test = self.__preprocess_train_test(train, test)
         res_df = pd.DataFrame({"egitim_ornek_sayisi": [len(y_train)],
@@ -59,10 +60,19 @@ class ACSIncomeModel:
 
         res_df_bias_metrics = self.bias_metrics.calculate_bias_metrics(test_df)
         return pd.concat([res_df_metrics, res_df_bias_metrics], axis=1)
-    def print_loaded_model_metrics(self, test, model, state):
+
+    def print_loaded_model_metrics(self, test, model, state=None):
         _, test_state = self.utils.get_state_data(test, test, state)
         x_test, y_test = self.preprocess.split_x_y(test_state)
         res_df = pd.DataFrame({"state": [state]})
+
+        res_df_metrics = self.__predict(model, x_test=x_test, y_test=y_test)
+        return pd.concat([res_df, res_df_metrics], axis=1)
+
+    def get_model_metrics(self, test, model, seed):
+        # _, test_state = self.utils.get_state_data(test, test, state)
+        x_test, y_test = self.preprocess.split_x_y(test)
+        res_df = pd.DataFrame({"state": [seed]})
 
         res_df_metrics = self.__predict(model, x_test=x_test, y_test=y_test)
         return pd.concat([res_df, res_df_metrics], axis=1)
